@@ -3,7 +3,7 @@
 
     <HeaderTop title="我的"/>
 
-    <section class="profile-number">
+    <section class="profile-number border-1px">
       <router-link class="profile-link" to="/login">
         <div class="profile_image">
           <i class="iconfont icon-person"></i>
@@ -108,6 +108,7 @@
   &.profile //我的
     width 100%
     .profile-number
+      top-border-1px(#e4e4e4)
       margin-top 45.5px
       .profile-link
         clearFix()
