@@ -17,7 +17,7 @@
           <div class="swiper-slide" v-for="(categorys, index) in categorysArr" :key="index">
             <a href="javascript:" class="link_to_food" v-for="(c, index) in categorys" :key="index">
               <div class="food_container">
-                <img :src="imgBaseUrl + c.image_url">
+                <img :src="imgBaseUrl+ c.image_url">
               </div>
               <span>{{c.title}}</span>
             </a>
@@ -56,13 +56,6 @@
     mounted () {
       this.$store.dispatch('getCategorys')
       this.$store.dispatch('getShops')
-
-      new Swiper('.swiper-container', {
-        pagination: { // 圆点指示器的容器div
-          el: '.swiper-pagination'
-        },
-        loop: true, // 可以循环轮播
-      })
     },
 
     computed: {
@@ -90,6 +83,28 @@
       }
     },
 
+    watch: {
+      // 更新状态数据后, 界面会异步更新
+      categorys (val) { // 状态数据改变了, 但界面还没有更新
+        /*setTimeout(() => {
+          new Swiper('.swiper-container', {
+            pagination: { // 圆点指示器的容器div
+              el: '.swiper-pagination'
+            },
+            loop: true, // 可以循环轮播
+          })
+        }, 100)*/
+        // 回调是在当前数据变化的DOM更新之后自动调用
+        this.$nextTick(function () {
+          new Swiper('.swiper-container', {
+            pagination: { // 圆点指示器的容器div
+              el: '.swiper-pagination'
+            },
+            loop: true, // 可以循环轮播
+          })
+        })
+      }
+    },
     components: {
       HeaderTop,
       ShopList
