@@ -9,7 +9,7 @@
         </div>
       </div>
       <div class="login_content">
-        <form>
+        <form @submit.prevent="login">
           <div :class="{on: loginWay}">
             <section class="login_message">
               <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
@@ -19,7 +19,7 @@
               </button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="tel" maxlength="8" placeholder="验证码" v-model="code">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -29,17 +29,17 @@
           <div :class="{on: !loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
               </section>
               <section class="login_verification">
-                <input :type="isHide ? 'password' : 'text'" maxlength="8" placeholder="密码">
+                <input :type="isHide ? 'password' : 'text'" maxlength="8" placeholder="密码" v-model="pwd">
                 <div class="switch_button" :class="isHide ? 'off' : 'on'" @click="isHide = !isHide">
                   <div class="switch_circle" :class="{right: !isHide}"></div>
                   <span class="switch_text">{{isHide ? '' : 'abc'}}</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
+                <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
                 <img class="get_verification" src="./images/captcha.svg" alt="captcha">
               </section>
             </section>
@@ -52,17 +52,26 @@
         <i class="iconfont icon-jiantou2"></i>
       </a>
     </div>
+    <AlertTip v-show="isShowAlert" :alertText="alertText" @closeTip="closeTip"/>
   </section>
 </template>
 
 <script>
+  import AlertTip from '../../components/AlertTip/AlertTip.vue'
+
   export default {
     data () {
       return {
         loginWay: true, // true: 短信, false: 密码
         phone: '', // 手机号
+        code: '', // 短信验证码
+        name: '', // 用户名
+        pwd: '', // 密码
+        captcha: '', // 图形验证码
         computeTime: 0, // 倒计时剩余的时间
-        isHide: true
+        isHide: true, // 是否隐藏密码
+        alertText: '', // 警告的提示文本
+        isShowAlert: false, // 是否显示警告框
       }
     },
 
@@ -74,6 +83,7 @@
     },
 
     methods: {
+      // 发送验证码
       sendCode () {
         // 如果是正确的手机号并且没有计时, 才开始倒计时
         if(this.isRightPhone && this.computeTime===0) {
@@ -87,7 +97,48 @@
             }
           }, 1000)
         }
+      },
+      // 关闭警告框
+      closeTip () {
+        this.isShowAlert = false
+        this.alertText = ''
+      },
+      //显示提示
+      showTip (text) {
+        this.isShowAlert = true
+        this.alertText = text
+      },
+      // 请求登陆
+      login () {
+        // 先进行前台表单验证
+        if(this.loginWay) { // 短信登陆
+          const {phone, code, isRightPhone} = this
+          if(!isRightPhone) {
+            this.showTip('请输入正确手机号')
+            return
+          } else if(!/^\d{6}/.test(code)) {
+            this.showTip('请输入正确验证码')
+            return
+          }
+
+        } else {
+          const {name, pwd, captcha} = this
+          if(!name) { // 用户名
+            this.showTip('请输入用户名')
+            return
+          } else if(!pwd) { // 密码
+            this.showTip('请输入密码')
+            return
+          } else if(!captcha) { // 图片验证码
+            this.showTip('请输入验证码')
+            return
+          }
+        }
       }
+    },
+
+    components: {
+      AlertTip
     }
   }
 </script>
