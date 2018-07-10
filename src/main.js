@@ -4,6 +4,9 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
+import './mock/mockServer' // 只需要引入即可
+
+
 Vue.component(Button.name, Button)
 
 /* eslint-disable no-new */

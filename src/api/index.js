@@ -41,3 +41,9 @@ export const reqUser = () => ajax('/api/userinfo')
  * 退出登陆
  */
 export const reqLogout = () => ajax('/api/logout')
+
+export const reqShopGoods = () => ajax('/goods')
+export const reqShopRatings = () => ajax('/ratings')
+export const reqShopInfo = () => ajax('/info')
+
+
