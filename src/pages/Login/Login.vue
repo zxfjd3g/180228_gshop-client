@@ -41,7 +41,7 @@
               <section class="login_message">
                 <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
                 <img class="get_verification" src="http://localhost:4000/captcha" alt="captcha"
-                     @click="changeCaptcha">
+                     @click="changeCaptcha" ref="captcha">
               </section>
             </section>
           </div>
@@ -58,7 +58,7 @@
 </template>
 
 <script>
-  import {reqSendCode} from '../../api'
+  import {reqSendCode, reqPwdLogin, reqSmsLogin} from '../../api'
   import AlertTip from '../../components/AlertTip/AlertTip.vue'
 
   export default {
@@ -122,7 +122,8 @@
         this.alertText = text
       },
       // 请求登陆
-      login () {
+      async login () {
+        let result
         // 先进行前台表单验证
         if(this.loginWay) { // 短信登陆
           const {phone, code, isRightPhone} = this
@@ -133,7 +134,8 @@
             this.showTip('请输入正确验证码')
             return
           }
-
+          // 发请求
+          result = await reqSmsLogin(phone, code)
         } else {
           const {name, pwd, captcha} = this
           if(!name) { // 用户名
@@ -146,12 +148,31 @@
             this.showTip('请输入验证码')
             return
           }
+          // 发请求
+          result = await reqPwdLogin(name, pwd, captcha)
+
+          // 如果密码登陆失败, 更新显示图形验证码
+          if(result.code===1) {
+            this.changeCaptcha()
+          }
         }
+
+        // 根据结果数据进行处理
+        if(result.code===1) {
+          this.showTip(result.msg)
+        } else { // 登陆成功
+          const user = result.data
+          // 保存到vuex的state
+          this.$store.dispatch('saveUser', user)
+          // 回到个人中心界面
+          this.$router.replace('/profile')
+        }
+
       },
 
-      changeCaptcha (event) {
+      changeCaptcha () {
         // 必须指定一个不同的src
-        event.target.src = 'http://localhost:4000/captcha?time='+Date.now()
+        this.$refs.captcha.src = 'http://localhost:4000/captcha?time='+Date.now()
       }
     },
 
