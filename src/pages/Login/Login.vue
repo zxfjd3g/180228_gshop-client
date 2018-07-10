@@ -14,7 +14,7 @@
             <section class="login_message">
               <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
 
-              <button class="get_verification" :class="{right_phone_number: isRightPhone}" @click="sendCode">
+              <button class="get_verification" :class="{right_phone_number: isRightPhone}" @click.prevent="sendCode">
                 {{computeTime>0 ? `已发送送(${computeTime}s)` : '获取验证码'}}
               </button>
             </section>
@@ -40,7 +40,8 @@
               </section>
               <section class="login_message">
                 <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
-                <img class="get_verification" src="./images/captcha.svg" alt="captcha">
+                <img class="get_verification" src="http://localhost:4000/captcha" alt="captcha"
+                     @click="changeCaptcha">
               </section>
             </section>
           </div>
@@ -57,6 +58,7 @@
 </template>
 
 <script>
+  import {reqSendCode} from '../../api'
   import AlertTip from '../../components/AlertTip/AlertTip.vue'
 
   export default {
@@ -84,18 +86,29 @@
 
     methods: {
       // 发送验证码
-      sendCode () {
+      async sendCode () {
         // 如果是正确的手机号并且没有计时, 才开始倒计时
         if(this.isRightPhone && this.computeTime===0) {
-          this.computeTime = 10
+          this.computeTime = 30
           // 启动循环定时器
           const intervalId = setInterval(() => {
             this.computeTime--
-            if(this.computeTime===0) {
+            if(this.computeTime<=0) {
               // 清除定时器
               clearInterval(intervalId)
+              this.computeTime = 0
             }
           }, 1000)
+
+          // 发送ajax请求发送验证码短信
+          const result = await reqSendCode(this.phone)
+          if(result.code===1) {
+            this.showTip(result.msg)
+            //停止计时
+            this.computeTime = 0
+          } else {
+            console.log('发送成功!')
+          }
         }
       },
       // 关闭警告框
@@ -134,6 +147,11 @@
             return
           }
         }
+      },
+
+      changeCaptcha (event) {
+        // 必须指定一个不同的src
+        event.target.src = 'http://localhost:4000/captcha?time='+Date.now()
       }
     },
 
