@@ -79,11 +79,13 @@ export default {
   },
 
   // 异步获取商品列表
-  async getShopGoods ({commit}) {
+  async getShopGoods ({commit}, cb) {
     const result = await reqShopGoods()
     if(result.code===0) {
       const goods = result.data
       commit(RECEIVE_GOODS, {goods})
+      // 在状态发生改变后调用回调
+      cb && cb()
     }
   },
 
