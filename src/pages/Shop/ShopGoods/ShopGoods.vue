@@ -4,9 +4,12 @@
       <div class="menu-wrapper">
         <ul>
           <!--current-->
-          <li class="menu-item" v-for="(good, index) in goods" :key="index">
-            <img class="icon" v-if="good.icon" :src="good.icon">
-            <span class="text bottom-border-1px">{{good.name}}</span>
+          <li class="menu-item" v-for="(good, index) in goods" :key="index"
+              :class="{current: index===currentIndex}" @click="clickItem(index)">
+            <span class="text bottom-border-1px">
+              <img class="icon" v-if="good.icon" :src="good.icon">
+              {{good.name}}
+            </span>
           </li>
           <li class="menu-item">
           <span class="text bottom-border-1px">
@@ -17,7 +20,7 @@
         </ul>
       </div>
       <div class="foods-wrapper">
-        <ul>
+        <ul ref="foodsUl">
           <li class="food-list-hook" v-for="(good, index) in goods" :key="index">
             <h1 class="title">{{good.name}}</h1>
             <ul>
@@ -52,18 +55,79 @@
   import BScroll from 'better-scroll'
   import {mapState} from 'vuex'
   export default {
+    data () {
+      return {
+        scrollY: 0, // 滚动的y轴坐标
+        tops: [], // 所有li的top组成的数组
+      }
+    },
     mounted () {
       this.$store.dispatch('getShopGoods', () => {
         this.$nextTick(() => {
-          new BScroll('.menu-wrapper')
-          new BScroll('.foods-wrapper')
+          this._initScroll()
+          this._intTops()
         })
       })
 
     },
 
+    methods: {
+      _initScroll() {
+        new BScroll('.menu-wrapper', {
+          click: true
+        })
+        this.foodsScroll = new BScroll('.foods-wrapper', {
+          probeType: 2 // 因为惯性滑动不会触发
+        })
+        // 给右侧滚动对象绑定滚动的监听
+        this.foodsScroll.on('scroll', ({x, y}) => {
+          console.log(x, y)
+          this.scrollY = Math.abs(y)
+        })
+
+        // 给右侧滚动对象绑定滚动结束的监听
+        this.foodsScroll.on('scrollEnd', ({x, y}) => {
+          console.log('scrollEnd', x, y)
+          this.scrollY = Math.abs(y)
+        })
+      },
+
+      _intTops () {
+        const tops = []
+        // 遍历所有li, 累加高度生成top, 并保存到tops中
+        const lis = this.$refs.foodsUl.getElementsByClassName('food-list-hook')
+        let top = 0
+        tops.push(top)
+        Array.from(lis).forEach(li => {
+          top += li.clientHeight
+          tops.push(top)
+        })
+
+        // 更新tops数据
+        this.tops = tops
+      },
+
+      clickItem (index) {
+        // 得到对应的y
+        const y = -this.tops[index]
+        // 立即更新scrollY---> 更新当前分类
+        this.scrollY = -y
+        // 平滑滚动到对应的位置
+        this.foodsScroll.scrollTo(0, y, 500)
+      }
+    },
+
     computed: {
-      ...mapState(['goods'])
+      ...mapState(['goods']),
+
+      currentIndex () {
+        const {scrollY, tops} = this
+        return tops.findIndex((top, index) => {
+          // 0, 3, 7, 10, 16
+          // 8   [top, nextTop)
+          return scrollY>=top && scrollY<tops[index+1]
+        })
+      }
     }
   }
 </script>
@@ -74,7 +138,7 @@
   .goods
     display: flex
     position: absolute
-    top: 275px
+    top: 225px
     bottom: 46px
     width: 100%
     background: #fff;
