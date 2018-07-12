@@ -93,20 +93,25 @@ export default {
   },
 
   // 异步获取评价列表
-  async getShopRatings ({commit}) {
+  async getShopRatings ({commit} , cb) {
     const result = await reqShopRatings()
     if(result.code===0) {
       const ratings = result.data
       commit(RECEIVE_RATINGS, {ratings})
+      // 在状态发生改变后调用回调
+      cb && cb()
     }
   },
 
   // 异步获取商家信息
-  async getShopInfo ({commit}) {
+  async getShopInfo ({commit}, cb) {
+
     const result = await reqShopInfo()
     if(result.code===0) {
       const info = result.data
       commit(RECEIVE_INFO, {info})
+      // 在状态发生改变后调用回调
+      cb && cb()
     }
   },
 
