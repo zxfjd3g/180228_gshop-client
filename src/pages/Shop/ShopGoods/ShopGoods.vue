@@ -24,7 +24,8 @@
           <li class="food-list-hook" v-for="(good, index) in goods" :key="index">
             <h1 class="title">{{good.name}}</h1>
             <ul>
-              <li class="food-item bottom-border-1px" v-for="(food, index) in good.foods" :key="index">
+              <li class="food-item bottom-border-1px" v-for="(food, index) in good.foods"
+                  :key="index" @click="showFood(food)">
                 <div class="icon">
                   <img width="57" height="57" :src="food.icon">
                 </div>
@@ -49,6 +50,7 @@
       </div>
       <ShopCart/>
     </div>
+    <Food :food="food" ref="food"/>
   </div>
 </template>
 
@@ -57,12 +59,14 @@
   import {mapState} from 'vuex'
   import CartControl from '../../../components/CartControl/CartControl.vue'
   import ShopCart from '../../../components/ShopCart/ShopCart.vue'
+  import Food from '../../../components/Food/Food.vue'
 
   export default {
     data () {
       return {
         scrollY: 0, // 滚动的y轴坐标
         tops: [], // 所有li的top组成的数组
+        food: {}, //当前选择的food
       }
     },
     mounted () {
@@ -75,13 +79,27 @@
 
     },
 
+    computed: {
+      ...mapState(['goods']),
+
+      currentIndex () {
+        const {scrollY, tops} = this
+        return tops.findIndex((top, index) => {
+          // 0, 3, 7, 10, 16
+          // 8   [top, nextTop)
+          return scrollY>=top && scrollY<tops[index+1]
+        })
+      }
+    },
+
     methods: {
       _initScroll() {
         new BScroll('.menu-wrapper', {
           click: true
         })
         this.foodsScroll = new BScroll('.foods-wrapper', {
-          probeType: 2 // 因为惯性滑动不会触发
+          probeType: 2, // 因为惯性滑动不会触发
+          click: true
         })
         // 给右侧滚动对象绑定滚动的监听
         this.foodsScroll.on('scroll', ({x, y}) => {
@@ -118,25 +136,20 @@
         this.scrollY = -y
         // 平滑滚动到对应的位置
         this.foodsScroll.scrollTo(0, y, 500)
-      }
-    },
+      },
 
-    computed: {
-      ...mapState(['goods']),
-
-      currentIndex () {
-        const {scrollY, tops} = this
-        return tops.findIndex((top, index) => {
-          // 0, 3, 7, 10, 16
-          // 8   [top, nextTop)
-          return scrollY>=top && scrollY<tops[index+1]
-        })
+      showFood (food) {
+        // 更新food数据
+        this.food = food
+        // 显示food组件界面
+        this.$refs.food.toggleShow()
       }
     },
 
     components: {
       CartControl,
-      ShopCart
+      ShopCart,
+      Food
     }
   }
 </script>

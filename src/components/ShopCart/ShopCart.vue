@@ -21,7 +21,7 @@
       <div class="shopcart-list" v-show="listShow">
         <div class="list-header">
           <h1 class="title">购物车</h1>
-          <span class="empty">清空</span>
+          <span class="empty" @click="clear">清空</span>
         </div>
         <div class="list-content">
           <ul>
@@ -41,6 +41,8 @@
 </template>
 
 <script>
+  import {MessageBox} from 'mint-ui'
+  import BScroll from 'better-scroll'
   import {mapState, mapGetters} from 'vuex'
   import CartControl from '../CartControl/CartControl.vue'
 
@@ -84,6 +86,24 @@
           return false
         }
 
+        /*
+        如何实现单例对象?
+          1. 在创建前, 判断是否已经存在, 只有不存在才创建
+          2. 在创建后, 保存创建的对象
+         */
+        if(this.isShow) {
+          this.$nextTick(function () {
+            if(!this.scroll) {
+              this.scroll = new BScroll('.list-content', {
+                click: true
+              })
+            } else {
+              this.scroll.refresh() // 通知滚动对象刷新(重新计算高度)
+            }
+
+          })
+        }
+
         // 当总数量大于0, 只需要看isShow
         return this.isShow
       }
@@ -95,6 +115,12 @@
         if(this.totalCount) {
           this.isShow = !this.isShow
         }
+      },
+
+      clear () {
+        MessageBox.confirm('确定清空吗?').then(action => {// 确认
+          this.$store.dispatch('clearCart')
+        }, () => {console.log('点击了取消')});
       }
     },
 
