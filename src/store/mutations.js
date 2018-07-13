@@ -57,7 +57,7 @@ export default {
   },
 
   [DECREMENT_FOOD_COUNT] (state, {food}) {
-    if(food.count) {// 只有有count时
+    if(food.count>0) {// 只有有count时
       food.count--
       if(food.count===0) {
         // 从购物车中移除
